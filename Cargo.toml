@@ -7,6 +7,8 @@ repository = "https://github.com/jgardona/rpools"
 homepage = "https://github.com/jgardona/rpools"
 description = "A minimalist workerpool for rust"
 license = "MIT"
+keywords = ["atomic", "workers", "threadpool", "concurrency"]
+categories = ["Concurrency, No standard library"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
