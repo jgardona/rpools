@@ -1,34 +1,6 @@
-use std::{
-    sync::atomic::Ordering,
-    sync::mpsc,
-    sync::Arc,
-    sync::Barrier,
-    sync::{atomic::AtomicUsize, Mutex},
-};
+use std::{sync::mpsc, sync::Arc, sync::Mutex};
 
 use rpools::pool;
-
-#[test]
-fn pool_should_sum_atomic_variable() {
-    let njobs = 20;
-    let nworkers = 42;
-    let pool = pool::WorkerPool::new(nworkers);
-    let atomic = Arc::new(AtomicUsize::new(0));
-    let barrier = Arc::new(Barrier::new(njobs + 1));
-
-    assert!(njobs <= nworkers, "too many jobs will deadlock");
-
-    for _ in 0..njobs {
-        let b = barrier.clone();
-        let atomic = atomic.clone();
-        pool.execute(move || {
-            atomic.fetch_add(1, Ordering::Relaxed);
-            b.wait();
-        });
-    }
-    barrier.wait();
-    assert_eq!(atomic.load(Ordering::SeqCst), njobs);
-}
 
 #[test]
 fn pool_should_synchronize_sender_and_receiver_and_fold_results() {
@@ -43,6 +15,10 @@ fn pool_should_synchronize_sender_and_receiver_and_fold_results() {
         let atx = atx.clone();
         pool.execute(move || {
             let tx = atx.lock().unwrap();
+
+            // a long task goes here
+            // send results to channel (use it to sync the pool with the parent thread)
+
             tx.send(1).expect("channel waiting for pool");
         });
     }

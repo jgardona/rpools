@@ -36,6 +36,10 @@ A minimalist rust workerpool implementation that uses channels to synchronize th
      let atx = atx.clone();
      pool.execute(move|| {
          let tx = atx.lock().unwrap();
+
+            // a long task goes here
+            // send results to channel (use it to sync the pool with the parent thread)
+
          tx.send(1).expect("channel will be there waiting for the pool");
      });
  }
