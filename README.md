@@ -19,8 +19,15 @@
 
 A minimalist rust workerpool implementation that uses channels to synchronize the jobs. It can spawn a fixed number of worker threads, that waits for a job queue.
 
+## Install
 
-* Use
+```
+$ cargo add rpools
+``` 
+
+## Usage
+
+* **A simple workerpool**
 ```rust
  use rpools::pool::WorkerPool;
  use std::sync::mpsc::channel;
@@ -47,8 +54,26 @@ A minimalist rust workerpool implementation that uses channels to synchronize th
  assert_eq!(rx.iter().take(n_jobs).fold(0, |a, b| a + b), 8);
 ```
 
-* Test
+* **Use sync module to synchronize your pool**
 
-```shell
-$ cargo test
+```rust
+let njobs = 20;
+let nworkers = 3;
+let pool = pool::WorkerPool::new(nworkers);
+let atomic = Arc::new(AtomicUsize::new(0));
+let wg = WaitGroup::default();
+
+// send the jobs to the pool
+for _ in 0..njobs {
+    let wg = wg.clone();
+    let atomic = atomic.clone();
+    pool.execute(move || {
+        atomic.fetch_add(1, Ordering::Relaxed);
+        drop(wg);
+    });
+}
+
+// wait for the pool finnishes
+wg.wait();
+assert_eq!(njobs, atomic.load(Ordering::Relaxed));
 ```

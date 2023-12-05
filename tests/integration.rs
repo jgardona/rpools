@@ -1,6 +1,33 @@
-use std::{sync::mpsc, sync::Arc, sync::Mutex};
+use std::{
+    sync::mpsc,
+    sync::{atomic::AtomicUsize, Mutex},
+    sync::{atomic::Ordering, Arc},
+};
 
-use rpools::pool;
+use rpools::{pool, sync::WaitGroup};
+
+#[test]
+fn test_waitgroup() {
+    let njobs = 20;
+    let nworkers = 3;
+    let pool = pool::WorkerPool::new(nworkers);
+    let atomic = Arc::new(AtomicUsize::new(0));
+    let wg = WaitGroup::default();
+
+    // send the jobs to the pool
+    for _ in 0..njobs {
+        let wg = wg.clone();
+        let atomic = atomic.clone();
+        pool.execute(move || {
+            atomic.fetch_add(1, Ordering::Relaxed);
+            drop(wg);
+        });
+    }
+
+    // wait for the pool finnishes
+    wg.wait();
+    assert_eq!(njobs, atomic.load(Ordering::Relaxed));
+}
 
 #[test]
 fn pool_should_synchronize_sender_and_receiver_and_fold_results() {

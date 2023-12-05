@@ -31,3 +31,4 @@
 
 // Imports and makes pool public.
 pub mod pool;
+pub mod sync;
