@@ -18,6 +18,27 @@ type Handle = thread::JoinHandle<()>;
 /// Implements a continuous pool of rust threads thats doesn't stops
 /// unless it gets out of scope.
 ///
+/// ### Examples
+/// 
+/// let njobs = 20;
+/// let nworkers = 3;
+/// let pool = pool::WorkerPool::new(nworkers);
+/// let atomic = Arc::new(AtomicUsize::new(0));
+/// let wg = WaitGroup::default();
+/// 
+/// // send the jobs to the pool
+/// for _ in 0..njobs {
+///     let wg = wg.clone();
+///     let atomic = atomic.clone();
+///     pool.execute(move || {
+///         atomic.fetch_add(1, Ordering::Relaxed);
+///         drop(wg);
+///     });
+/// }
+/// 
+/// // wait for the pool finnishes
+/// wg.wait();
+/// assert_eq!(njobs, atomic.load(Ordering::Relaxed));
 pub struct WorkerPool {
     workers: Vec<Worker>,
     sender: mpsc::Sender<Job>,
